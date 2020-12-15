@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { Router, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+
 
 (async () => {
 
@@ -31,6 +32,30 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   //! END @TODO1
   
+  app.get( "/filteredimage/", async ( req: Request, res: Response ) => {
+    let { image_url } = req.query;
+
+    if ( !image_url ) {
+      return res.status(400)
+                .send(`image_url is required`);
+    }
+    
+   try
+    {
+      const fileResult= await filterImageFromURL(image_url);
+    
+      res.status(200).sendFile(fileResult, {}, (err)=> {
+        if (err) { return res.status(422).send(`An error has occured while processing the image`); }
+        deleteLocalFiles([fileResult]);
+      });
+    }
+    catch (err)
+    {
+      res.status(422).send(`An error has occured while processing the image`);
+    }
+} );
+ 
+
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
